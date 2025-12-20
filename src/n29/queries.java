@@ -46,6 +46,15 @@ public class queries {
         this.price-=line.getCost();
         this.happines-=min(line.f(this.customer.getL()),line.f(this.customer.getR()));
     }
-
+    public String getQueryInfo(){
+        String res="Customer info <<<<<<<<\n" + customer.getInfo() + "\n";
+        int tin=0;
+        for(lines line:orders){
+            tin+=1;
+            res+="Order #" + tin + '\n';
+            res+=line.getInfo() +'\n';
+        }
+        return res;
+    }
 
 }

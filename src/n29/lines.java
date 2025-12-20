@@ -34,5 +34,7 @@ public class lines {
     public long f(int x){
         return (long) k *x+b;
     }
-
+    public String getInfo(){
+        return "line name: " + getName() + "\nline function: "+getK()+ "*x+" +getB() + "\nline cost:" + getCost();
+    }
 }

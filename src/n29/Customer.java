@@ -25,5 +25,7 @@ public class Customer {
     public void setMoney(long money){
         this.money=money;
     }
-
+    public String getInfo(){
+        return "Customer name:" + getName() + '\n' + "Customer range:[" + getL() + "," + getR() + "]\n" + "Customer balance:" +getMoney() ;
+    }
 }

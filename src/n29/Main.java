@@ -11,6 +11,9 @@ public class Main {
         System.out.println(queries1.getTotalPrice());
         System.out.println(queries1.getTotalPriceWithPayment());
         System.out.println(queries1.getHappines());
+        System.out.println(customer1.getInfo());
+        System.out.println(line1.getInfo());
+        System.out.println(queries1.getQueryInfo());
     }
 }
 //
