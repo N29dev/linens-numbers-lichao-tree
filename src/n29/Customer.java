@@ -4,11 +4,22 @@ public class Customer {
     private int l;
     private int r; // range of favorite integers [l,r]
     private long money; // money
-    public Customer(String name,int l,int r,long money){
-        this.name=name;
-        this.l=l;
-        this.r=r;
-        this.money=money;
+    private int id;
+    public Customer(String name,int l,int r,long money,int id){
+        setName(name);
+        setLR(l,r);
+        setMoney(money);
+        setId(id);
+    }
+    public boolean setId(int id){
+        if(id<0){
+            return false;
+        }
+        this.id=id;
+        return true;
+    }
+    public int getId(){
+        return this.id;
     }
     public String getName(){
         return this.name;
@@ -22,10 +33,25 @@ public class Customer {
     public long getMoney(){
         return this.money;
     }
-    public void setMoney(long money){
+    public boolean setLR(int l,int r){
+        if(l>r)return false;
+        this.l=l;
+        this.r=r;
+        return true;
+    }
+    public boolean setName(String name){
+        if(name==null || name.isBlank()){
+            return false;
+        }
+        this.name=name;
+        return true;
+    }
+    public boolean setMoney(long money){
+        if(money<0)return false;
         this.money=money;
+        return true;
     }
     public String getInfo(){
-        return "Customer name:" + getName() + '\n' + "Customer range:[" + getL() + "," + getR() + "]\n" + "Customer balance:" +getMoney() ;
+        return "Customer id:" + getId() + "\nCustomer name:" + getName() + "\nCustomer range:[" + getL() + "," + getR() + "]\n" + "Customer balance:" +getMoney() ;
     }
 }
