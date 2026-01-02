@@ -1,69 +1,64 @@
 package n29;
+
 import java.util.ArrayList;
 
-import static java.lang.Long.min;
-
 public class Orders {
-    private Customer customer;
-    private ArrayList<Line> orders;
-    private long happines;
+    private final Customer customer;
+    private final ArrayList<LineBase> orderLines;   // parent type list ✅
+    private long happiness;
     private long price;
-    private int id;
-    public Orders(Customer customer,int id){
-        this.customer=customer;
-        orders = new ArrayList<>();
-        happines=0;
-        price=0;
-        setId(id);
-    }
-    public boolean setId(int id){
-        if(id<0)return false;
-        this.id=id;
-        return true;
-    }
-    public int getId(){
-        return this.id;
-    }
-    public Customer getCustomer(){
-        return this.customer;
-    }
-    public long getTotalPrice(){
-        return this.price;
-    }
-    public long getTotalPriceWithPayment(){
-        long res=getTotalPrice();
-        if(res-customer.getMoney()<=0){
-            return 0;
-        }
-        else {
-            return res - customer.getMoney();
-        }
-    }
-    public long getHappines(){
-        return this.happines;
-    }
-    public ArrayList<Line> getOrders(){
-        return this.orders;
-    }
-    public void addLine(Line line){
-        this.orders.add(line);
-        this.price+=line.getCost();
-        this.happines+=min(line.f(this.customer.getL()),line.f(this.customer.getR()));
-    }
-    public void delLine(Line line){
-        this.orders.remove(line);
-        this.price-=line.getCost();
-        this.happines-=min(line.f(this.customer.getL()),line.f(this.customer.getR()));
-    }
-    public String getInfo(){
-        String res="Customer info <<<<<<<<\n" + customer.getInfo() + "\n";
-        int tin=0;
-        for(Line line:orders){
-            tin+=1;
-            res+="Order #" + tin + '\n';
-            res+=line.getInfo() +'\n';
-        }
-        return res;
+    private final int id;
+
+    public Orders(Customer customer, int id) {
+        this.customer = customer;
+        this.id = id;
+        this.orderLines = new ArrayList<>();
+        this.happiness = 0;
+        this.price = 0;
     }
 
+    public int getId() { return id; }
+    public Customer getCustomer() { return customer; }
+    public long getHappiness() { return happiness; }
+    public long getPrice() { return price; }
+
+    public String addLine(LineBase line) {
+        if (line == null) return "Failed: null line.";
+
+        orderLines.add(line);
+        price += line.getCost();
+
+        long best = Math.min(line.f(customer.getL()), line.f(customer.getR()));
+        happiness -= best;
+
+        return "OK";
+    }
+
+    public String getInfo() {
+        StringBuilder res = new StringBuilder();
+        res.append("Order id: ").append(id).append("\n\n");
+
+        res.append("Customer info <<<<<<<<\n");
+        res.append(customer.getInfo()).append("\n\n");
+
+        res.append("Order lines <<<<<<<<\n");
+        int i = 0;
+        for (LineBase line : orderLines) {
+            i++;
+            res.append("Line #").append(i).append("\n");
+            res.append(line.getInfo()).append("\n");
+
+            // optional: instanceof + casting demo (not required for running)
+            if (line instanceof LinearLine) {
+                res.append("(instanceof demo) This is LinearLine\n");
+            } else if (line instanceof QuadraticLine) {
+                res.append("(instanceof demo) This is QuadraticLine\n");
+            }
+            res.append("\n");
+        }
+
+        res.append("Total price: ").append(price).append("\n");
+        res.append("Total happiness: ").append(happiness).append("\n");
+        return res.toString();
+    }
 }
