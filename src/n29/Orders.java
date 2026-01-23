@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Orders {
     private final Customer customer;
-    private final ArrayList<LineBase> orderLines;   // parent type list ✅
+    private final ArrayList<LineBase> orderLines;
     private long happiness;
     private long price;
     private final int id;
@@ -48,7 +48,7 @@ public class Orders {
             res.append("Line #").append(i).append("\n");
             res.append(line.getInfo()).append("\n");
 
-            // optional: instanceof + casting demo (not required for running)
+           
             if (line instanceof LinearLine) {
                 res.append("(instanceof demo) This is LinearLine\n");
             } else if (line instanceof QuadraticLine) {
