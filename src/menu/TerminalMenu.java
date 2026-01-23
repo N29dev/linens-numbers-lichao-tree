@@ -1,9 +1,12 @@
-package n29;
+package menu;
+
+import exception.InvalidInputException;
+import model.*;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class TerminalWork {
+public class TerminalMenu implements Menu {
 
     private final Scanner cin;
 
@@ -29,25 +32,46 @@ public class TerminalWork {
             "9. GET ORDER INFO BY ID"
     };
 
-    public TerminalWork(Scanner cin) {
+    public TerminalMenu(Scanner cin) {
+        if (cin == null) throw new IllegalArgumentException("Scanner cannot be null");
         this.cin = cin;
     }
 
+    @Override
+    public void displayMenu() {
+        for (String option : options) {
+            System.out.println(option);
+        }
+    }
+
+    @Override
     public void run() {
         while (true) {
             System.out.println();
-            startInfo();
+            displayMenu();
             int t = readInt("Your choice: ");
 
             if (t == 0) {
                 System.out.println("Bye!");
                 return;
             } else if (t == 1) {
-                System.out.println(addCustomerInteractive());
+                try {
+                    System.out.println(addCustomerInteractive());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
             } else if (t == 2) {
-                System.out.println(addLineInteractive());
+                try {
+                    System.out.println(addLineInteractive());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
             } else if (t == 3) {
-                System.out.println(addOrderInteractive());
+                try {
+                    System.out.println(addOrderInteractive());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
             } else if (t == 4) {
                 System.out.println(listCustomers());
             } else if (t == 5) {
@@ -69,12 +93,6 @@ public class TerminalWork {
         }
     }
 
-    private void startInfo() {
-        for (String option : options) {
-            System.out.println(option);
-        }
-    }
-
     private String addCustomerInteractive() {
         System.out.println("=== Add Customer ===");
         System.out.print("Name: ");
@@ -85,9 +103,9 @@ public class TerminalWork {
         long money = readLong("Money: ");
 
         Customer c = new Customer(name, l, r, money, nextCustomerId);
-        String res = addCustomer(c);
-        if (res.startsWith("OK")) nextCustomerId++;
-        return res;
+        customers.add(c);
+        nextCustomerId++;
+        return "OK: Customer added. id = " + c.getId();
     }
 
     private String addLineInteractive() {
@@ -114,9 +132,9 @@ public class TerminalWork {
             return "Failed: unknown line type.";
         }
 
-        String res = addLine(line);
-        if (res.startsWith("OK")) nextLineId++;
-        return res;
+        lines.add(line);
+        nextLineId++;
+        return "OK: Line added. id = " + line.getId();
     }
 
     private String addOrderInteractive() {
@@ -151,7 +169,6 @@ public class TerminalWork {
             }
         }
 
-
         long total = ord.getPrice();
         if (customer.getMoney() < total) {
             return "Failed: customer has not enough money. Need " + total + ", has " + customer.getMoney();
@@ -163,70 +180,40 @@ public class TerminalWork {
         return "OK: Order created. Order id = " + ord.getId();
     }
 
-
-    public String addCustomer(Customer x) {
-        if (x == null) return "Failed: null customer.";
-        if (x.getName() == null || x.getName().isBlank()) return "Failed: invalid name.";
-        if (x.getL() > x.getR()) return "Failed: invalid range (L > R).";
-        if (x.getMoney() < 0) return "Failed: invalid money.";
-
-        customers.add(x);
-        return "OK: Customer added. id = " + x.getId();
-    }
-
-    public String addLine(LineBase x) {
-        if (x == null) return "Failed: null line.";
-        if (x.getName() == null || x.getName().isBlank()) return "Failed: invalid name.";
-        if (x.getCost() <= 0) return "Failed: invalid cost.";
-
-        lines.add(x);
-        return "OK: Line added. id = " + x.getId();
-    }
-
-    public String listCustomers() {
+    private String listCustomers() {
         if (customers.isEmpty()) return "No customers.";
         StringBuilder sb = new StringBuilder("=== Customers ===\n");
-        for (Customer c : customers) {
-            sb.append(c.getShortInfo()).append('\n');
-        }
+        for (Customer c : customers) sb.append(c.getShortInfo()).append('\n');
         return sb.toString();
     }
 
-    public String listLines() {
+    private String listLines() {
         if (lines.isEmpty()) return "No lines.";
         StringBuilder sb = new StringBuilder("=== Lines ===\n");
-        for (LineBase l : lines) {
-            sb.append(l.getShortInfo()).append('\n');
-        }
+        for (LineBase l : lines) sb.append(l.getShortInfo()).append('\n');
         return sb.toString();
     }
 
-    public String listOrders() {
+    private String listOrders() {
         if (orders.isEmpty()) return "No orders.";
         StringBuilder sb = new StringBuilder("=== Orders ===\n");
-        for (Orders o : orders) {
-            sb.append("Order id=").append(o.getId())
-                    .append(" | customer=").append(o.getCustomer().getName())
-                    .append(" | price=").append(o.getPrice())
-                    .append(" | happiness=").append(o.getHappiness())
-                    .append('\n');
-        }
+        for (Orders o : orders) sb.append(o.getShortInfo()).append('\n');
         return sb.toString();
     }
 
-    public String getCustomerInfoById(int id) {
+    private String getCustomerInfoById(int id) {
         Customer c = getCustomerById(id);
         if (c == null) return "Failed to find Customer with id " + id;
         return c.getInfo();
     }
 
-    public String getLineInfoById(int id) {
+    private String getLineInfoById(int id) {
         LineBase l = getLineById(id);
         if (l == null) return "Failed to find Line with id " + id;
         return l.getInfo();
     }
 
-    public String getOrdersInfoById(int id) {
+    private String getOrdersInfoById(int id) {
         Orders o = getOrderById(id);
         if (o == null) return "Failed to find Orders with id " + id;
         return o.getInfo();
@@ -247,14 +234,30 @@ public class TerminalWork {
         return null;
     }
 
+    private int parseIntChecked(String s) throws InvalidInputException {
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Invalid int, try again.");
+        }
+    }
+
+    private long parseLongChecked(String s) throws InvalidInputException {
+        try {
+            return Long.parseLong(s);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Invalid long, try again.");
+        }
+    }
+
     private int readInt(String prompt) {
         while (true) {
             System.out.print(prompt);
             String s = cin.nextLine().trim();
             try {
-                return Integer.parseInt(s);
-            } catch (Exception e) {
-                System.out.println("Invalid int, try again.");
+                return parseIntChecked(s);
+            } catch (InvalidInputException e) {
+                System.out.println(e.getMessage());
             }
         }
     }
@@ -264,9 +267,9 @@ public class TerminalWork {
             System.out.print(prompt);
             String s = cin.nextLine().trim();
             try {
-                return Long.parseLong(s);
-            } catch (Exception e) {
-                System.out.println("Invalid long, try again.");
+                return parseLongChecked(s);
+            } catch (InvalidInputException e) {
+                System.out.println(e.getMessage());
             }
         }
     }

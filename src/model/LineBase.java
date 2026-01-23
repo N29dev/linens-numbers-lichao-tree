@@ -1,32 +1,29 @@
-package n29;
+package model;
 
-public abstract class LineBase {
+public abstract class LineBase implements InfoPrintable {
     protected int id;
     protected String name;
     protected int cost;
 
     public LineBase(int id, String name, int cost) {
-        if (!setId(id)) throw new IllegalArgumentException("Invalid id");
-        if (!setName(name)) throw new IllegalArgumentException("Invalid name");
-        if (!setCost(cost)) throw new IllegalArgumentException("Invalid cost");
+        setId(id);
+        setName(name);
+        setCost(cost);
     }
 
-    public boolean setId(int id) {
-        if (id <= 0) return false;
+    public void setId(int id) {
+        if (id <= 0) throw new IllegalArgumentException("Invalid id: " + id);
         this.id = id;
-        return true;
     }
 
-    public boolean setName(String name) {
-        if (name == null || name.isBlank()) return false;
+    public void setName(String name) {
+        if (name == null || name.isBlank()) throw new IllegalArgumentException("Invalid name");
         this.name = name.trim();
-        return true;
     }
 
-    public boolean setCost(int cost) {
-        if (cost <= 0) return false;
+    public void setCost(int cost) {
+        if (cost <= 0) throw new IllegalArgumentException("Invalid cost: " + cost);
         this.cost = cost;
-        return true;
     }
 
     public int getId() { return id; }
@@ -37,10 +34,12 @@ public abstract class LineBase {
     public abstract String getType();
     public abstract String getFormula();
 
+    @Override
     public String getShortInfo() {
         return "Line id=" + id + " | " + name + " | type=" + getType() + " | cost=" + cost;
     }
 
+    @Override
     public String getInfo() {
         return "Line id: " + id +
                 "\nLine name: " + name +

@@ -1,9 +1,9 @@
-package n29;
+package model;
 
 public class QuadraticLine extends LineBase {
-    private long a;
-    private long b;
-    private long c;
+    private final long a;
+    private final long b;
+    private final long c;
 
     public QuadraticLine(int id, String name, int cost, long a, long b, long c) {
         super(id, name, cost);

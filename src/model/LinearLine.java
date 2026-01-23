@@ -1,8 +1,8 @@
-package n29;
+package model;
 
 public class LinearLine extends LineBase {
-    private long k;
-    private long b;
+    private final long k;
+    private final long b;
 
     public LinearLine(int id, String name, int cost, long k, long b) {
         super(id, name, cost);

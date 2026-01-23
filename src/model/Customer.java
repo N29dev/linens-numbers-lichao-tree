@@ -1,6 +1,6 @@
-package n29;
+package model;
 
-public class Customer {
+public class Customer implements InfoPrintable {
     private String name;
     private int l;
     private int r;
@@ -8,35 +8,31 @@ public class Customer {
     private int id;
 
     public Customer(String name, int l, int r, long money, int id) {
-        if (!setName(name)) throw new IllegalArgumentException("Invalid name");
-        if (!setLR(l, r)) throw new IllegalArgumentException("Invalid range");
-        if (!setMoney(money)) throw new IllegalArgumentException("Invalid money");
-        if (!setId(id)) throw new IllegalArgumentException("Invalid id");
+        setName(name);
+        setLR(l, r);
+        setMoney(money);
+        setId(id);
     }
 
-    public boolean setId(int id) {
-        if (id <= 0) return false;
+    public void setId(int id) {
+        if (id <= 0) throw new IllegalArgumentException("Invalid id: " + id);
         this.id = id;
-        return true;
     }
 
-    public boolean setName(String name) {
-        if (name == null || name.isBlank()) return false;
+    public void setName(String name) {
+        if (name == null || name.isBlank()) throw new IllegalArgumentException("Invalid name");
         this.name = name.trim();
-        return true;
     }
 
-    public boolean setLR(int l, int r) {
-        if (l > r) return false;
+    public void setLR(int l, int r) {
+        if (l > r) throw new IllegalArgumentException("Invalid range: L > R");
         this.l = l;
         this.r = r;
-        return true;
     }
 
-    public boolean setMoney(long money) {
-        if (money < 0) return false;
+    public void setMoney(long money) {
+        if (money < 0) throw new IllegalArgumentException("Invalid money: " + money);
         this.money = money;
-        return true;
     }
 
     public int getId() { return id; }
@@ -45,10 +41,12 @@ public class Customer {
     public int getR() { return r; }
     public long getMoney() { return money; }
 
+    @Override
     public String getShortInfo() {
         return "Customer id=" + id + " | " + name + " | range=[" + l + "," + r + "] | money=" + money;
     }
 
+    @Override
     public String getInfo() {
         return "Customer id: " + id +
                 "\nCustomer name: " + name +
