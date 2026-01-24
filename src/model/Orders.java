@@ -32,7 +32,7 @@ public class Orders implements InfoPrintable {
         price += line.getCost();
 
         long best = Math.min(line.f(customer.getL()), line.f(customer.getR()));
-        happiness -= best;
+        happiness += best;
 
         return "OK";
     }

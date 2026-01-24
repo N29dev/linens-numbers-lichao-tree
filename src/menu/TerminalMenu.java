@@ -101,7 +101,6 @@ public class TerminalMenu implements Menu {
         int l = readInt("L: ");
         int r = readInt("R: ");
         long money = readLong("Money: ");
-
         Customer c = new Customer(name, l, r, money, nextCustomerId);
         customers.add(c);
         nextCustomerId++;
