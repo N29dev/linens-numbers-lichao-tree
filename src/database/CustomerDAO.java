@@ -35,13 +35,13 @@ public class CustomerDAO {
         Connection connection = DatabaseConnection.getConnection();
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
-            // Set parameters (? → actual values)
+
             statement.setString(1, customer.getName());
             statement.setLong(2, customer.getMoney());
             statement.setInt(3, customer.getL());
             statement.setInt(4, customer.getR());
             statement.setInt(5, customer.getId());
-            // Execute INSERT
+
             int rowsInserted = statement.executeUpdate();
             if (rowsInserted > 0) {
                 System.out.println(" Customer inserted successfully!");

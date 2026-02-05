@@ -43,7 +43,7 @@ public class TerminalMenu implements Menu {
         if (cin == null) throw new IllegalArgumentException("Scanner cannot be null");
         this.cin = cin;
         customerDAO.createTable();
-        // Initialize nextCustomerId based on existing data
+
         List<Customer> existingCustomers = customerDAO.getAllCustomers();
         for (Customer c : existingCustomers) {
             if (c.getId() >= nextCustomerId) {
