@@ -1,16 +1,18 @@
 package menu;
 
+import database.CustomerDAO;
 import exception.InvalidInputException;
 import model.*;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class TerminalMenu implements Menu {
 
     private final Scanner cin;
+    private final CustomerDAO customerDAO = new CustomerDAO();
 
-    private final ArrayList<Customer> customers = new ArrayList<>();
     private final ArrayList<LineBase> lines = new ArrayList<>();
     private final ArrayList<Orders> orders = new ArrayList<>();
 
@@ -27,14 +29,27 @@ public class TerminalMenu implements Menu {
             "4. LIST OF CUSTOMERS",
             "5. LIST OF LINES",
             "6. LIST OF ORDERS",
-            "7. GET CUSTOMER INFO BY ID",
-            "8. GET LINE INFO BY ID",
-            "9. GET ORDER INFO BY ID"
+            "7. UPDATE CUSTOMER",
+            "8. DELETE CUSTOMER",
+            "9. SEARCH & FILTER",
+            "10. SEARCH BY NAME",
+            "11. HIGH-PAID CUSTOMERS (Money >= X)",
+            "12. GET CUSTOMER INFO BY ID",
+            "13. GET LINE INFO BY ID",
+            "14. GET ORDER INFO BY ID"
     };
 
     public TerminalMenu(Scanner cin) {
         if (cin == null) throw new IllegalArgumentException("Scanner cannot be null");
         this.cin = cin;
+        customerDAO.createTable();
+        // Initialize nextCustomerId based on existing data
+        List<Customer> existingCustomers = customerDAO.getAllCustomers();
+        for (Customer c : existingCustomers) {
+            if (c.getId() >= nextCustomerId) {
+                nextCustomerId = c.getId() + 1;
+            }
+        }
     }
 
     @Override
@@ -79,12 +94,30 @@ public class TerminalMenu implements Menu {
             } else if (t == 6) {
                 System.out.println(listOrders());
             } else if (t == 7) {
+                try {
+                    System.out.println(updateCustomerInteractive());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
+            } else if (t == 8) {
+                try {
+                    System.out.println(deleteCustomerInteractive());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
+            } else if (t == 9) {
+                System.out.println(searchAndFilterInteractive());
+            } else if (t == 10) {
+                System.out.println(searchByNameInteractive());
+            } else if (t == 11) {
+                System.out.println(searchByMinMoneyInteractive());
+            } else if (t == 12) {
                 int id = readInt("Customer id: ");
                 System.out.println(getCustomerInfoById(id));
-            } else if (t == 8) {
+            } else if (t == 13) {
                 int id = readInt("Line id: ");
                 System.out.println(getLineInfoById(id));
-            } else if (t == 9) {
+            } else if (t == 14) {
                 int id = readInt("Order id: ");
                 System.out.println(getOrdersInfoById(id));
             } else {
@@ -93,51 +126,51 @@ public class TerminalMenu implements Menu {
         }
     }
 
-    private String addCustomerInteractive() {
+    private String addCustomerInteractive(){
         System.out.println("=== Add Customer ===");
-        System.out.print("Name: ");
+        System.out.print("Customer name: ");
         String name = cin.nextLine().trim();
-
-        int l = readInt("L: ");
-        int r = readInt("R: ");
-        long money = readLong("Money: ");
-        Customer c = new Customer(name, l, r, money, nextCustomerId);
-        customers.add(c);
+        int L=readInt("Customer L:");
+        int R=readInt("Customer R:");
+        long money=readLong("Customer money:");
+        Customer x=new Customer(name,L,R,money,nextCustomerId);
         nextCustomerId++;
-        return "OK: Customer added. id = " + c.getId();
+        customerDAO.insertCustomer(x);
+        return "OK: Customer created. Customer id = " + x.getId();
     }
 
     private String addLineInteractive() {
         System.out.println("=== Add Line ===");
-        System.out.println("Type: 1 = Linear (k*x + b), 2 = Quadratic (a*x^2 + b*x + c)");
-        int type = readInt("Type: ");
-
-        System.out.print("Name: ");
+        System.out.print("Line name: ");
         String name = cin.nextLine().trim();
-
-        int cost = readInt("Cost: ");
-
-        LineBase line;
-        if (type == 1) {
-            long k = readLong("k: ");
-            long b = readLong("b: ");
-            line = new LinearLine(nextLineId, name, cost, k, b);
-        } else if (type == 2) {
-            long a = readLong("a: ");
-            long b = readLong("b: ");
-            long c = readLong("c: ");
-            line = new QuadraticLine(nextLineId, name, cost, a, b, c);
-        } else {
-            return "Failed: unknown line type.";
+        int type=readInt("Line type (1 - linear, 2 - quadratic):");
+        if(type==1){
+            long k=readLong("Line k:");
+            long b=readLong("Line b:");
+            int cost=readInt("Line cost:");
+            LineBase x=new LinearLine(nextLineId,name,cost,k,b);
+            nextLineId++;
+            lines.add(x);
+            return "Ok: Line created. Line id = " + x.getId();
         }
-
-        lines.add(line);
-        nextLineId++;
-        return "OK: Line added. id = " + line.getId();
+        else if(type==2){
+            long a=readLong("Line a:");
+            long b=readLong("Line b:");
+            long c=readLong("Line c:");
+            int cost=readInt("Line cost:");
+            LineBase x=new QuadraticLine(nextLineId,name,cost,a,b,c);
+            nextLineId++;
+            lines.add(x);
+            return "Ok: Line created. Line id = " + x.getId();
+        }
+        else {
+            return "Error: invalid line type.";
+        }
     }
 
     private String addOrderInteractive() {
         System.out.println("=== Add Order ===");
+        List<Customer> customers = customerDAO.getAllCustomers();
         if (customers.isEmpty()) return "Failed: no customers. Add customer first.";
         if (lines.isEmpty()) return "Failed: no lines. Add lines first.";
 
@@ -174,16 +207,135 @@ public class TerminalMenu implements Menu {
         }
 
         customer.setMoney(customer.getMoney() - total);
+        customerDAO.updateCustomer(customer);
         orders.add(ord);
         nextOrderId++;
         return "OK: Order created. Order id = " + ord.getId();
     }
 
     private String listCustomers() {
+        List<Customer> customers = customerDAO.getAllCustomers();
         if (customers.isEmpty()) return "No customers.";
         StringBuilder sb = new StringBuilder("=== Customers ===\n");
         for (Customer c : customers) sb.append(c.getShortInfo()).append('\n');
         return sb.toString();
+    }
+
+    private String updateCustomerInteractive() {
+        int id = readInt("Enter Customer ID to update: ");
+        Customer c = customerDAO.getCustomerById(id);
+        if (c == null) return "Customer not found.";
+
+        System.out.println("Current info: " + c.getShortInfo());
+        System.out.println("Press Enter to keep current value, or type new value.");
+
+        System.out.print("New name [" + c.getName() + "]: ");
+        String name = cin.nextLine().trim();
+        if (!name.isEmpty()) c.setName(name);
+
+        String moneyStr = readOptionalString("New balance [" + c.getMoney() + "]: ");
+        if (!moneyStr.isEmpty()) {
+            try {
+                c.setMoney(Long.parseLong(moneyStr));
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number, keeping original.");
+            }
+        }
+
+        String lStr = readOptionalString("New L [" + c.getL() + "]: ");
+        if (!lStr.isEmpty()) {
+            try {
+                int newL = Integer.parseInt(lStr);
+                c.setLR(newL, c.getR());
+            } catch (Exception e) {
+                System.out.println("Invalid value, keeping original. " + e.getMessage());
+            }
+        }
+
+        String rStr = readOptionalString("New R [" + c.getR() + "]: ");
+        if (!rStr.isEmpty()) {
+            try {
+                int newR = Integer.parseInt(rStr);
+                c.setLR(c.getL(), newR);
+            } catch (Exception e) {
+                System.out.println("Invalid value, keeping original. " + e.getMessage());
+            }
+        }
+
+        if (customerDAO.updateCustomer(c)) {
+            return "Customer updated successfully!";
+        } else {
+            return "Update failed.";
+        }
+    }
+
+    private String deleteCustomerInteractive() {
+        int id = readInt("Enter Customer ID to delete: ");
+        Customer c = customerDAO.getCustomerById(id);
+        if (c == null) return "Customer not found.";
+
+        System.out.println("SURE TO DELETE THIS?");
+        System.out.println(c.getInfo());
+        System.out.print("Type 'yes' to confirm: ");
+        String confirm = cin.nextLine().trim();
+
+        if (confirm.equalsIgnoreCase("yes")) {
+            if (customerDAO.deleteCustomer(id)) {
+                return "Customer deleted successfully!";
+            } else {
+                return "Delete failed.";
+            }
+        } else {
+            return "Deletion canceled.";
+        }
+    }
+
+    private String searchAndFilterInteractive() {
+        System.out.println("=== Search & Filter ===");
+        System.out.println("1. Search by name (ILIKE)");
+        System.out.println("2. Search by money range (BETWEEN)");
+        System.out.println("3. High-paid customers (>= X)");
+        int choice = readInt("Choice: ");
+
+        if (choice == 1) {
+            return searchByNameInteractive();
+        } else if (choice == 2) {
+            long min = readLong("Min money: ");
+            long max = readLong("Max money: ");
+            List<Customer> results = customerDAO.searchByMoneyRange(min, max);
+            return formatCustomerList(results, "Search Results (Money Range)");
+        } else if (choice == 3) {
+            return searchByMinMoneyInteractive();
+        } else {
+            return "Invalid choice.";
+        }
+    }
+
+    private String searchByNameInteractive() {
+        System.out.print("Enter name (or partial name): ");
+        String query = cin.nextLine().trim();
+        List<Customer> results = customerDAO.searchByName(query);
+        return formatCustomerList(results, "Search Results (Name)");
+    }
+
+    private String searchByMinMoneyInteractive() {
+        long min = readLong("Enter min money: ");
+        List<Customer> results = customerDAO.searchByMinMoney(min);
+        return formatCustomerList(results, "High-Paid Customers");
+    }
+
+    private String formatCustomerList(List<Customer> list, String title) {
+        if (list.isEmpty()) return "No matches found.";
+        StringBuilder res = new StringBuilder("=== " + title + " ===\n");
+        for (Customer c : list) {
+            res.append(c.getShortInfo()).append("\n");
+        }
+        return res.toString();
+    }
+
+    private String readOptionalString(String prompt) {
+        System.out.print(prompt);
+        return cin.nextLine().trim();
     }
 
     private String listLines() {
@@ -219,8 +371,7 @@ public class TerminalMenu implements Menu {
     }
 
     private Customer getCustomerById(int id) {
-        for (Customer c : customers) if (c.getId() == id) return c;
-        return null;
+        return customerDAO.getCustomerById(id);
     }
 
     private LineBase getLineById(int id) {
